@@ -1,0 +1,31 @@
+2025-03-12 21:20:52,208 - my_logger - ERROR - Error reading file: type object 'WeatherData' has no attribute '_DataLoader__DataLoader'
+2025-03-12 21:24:13,868 - my_logger - ERROR - Error reading file: type object 'WeatherData' has no attribute '_DataLoader__DataLoader'
+2025-03-12 21:26:03,646 - my_logger - ERROR - Error reading file: Can't pickle <function WeatherData.__DataLoader._read_chunk at 0x11091ea20>: attribute lookup WeatherData.__DataLoader._read_chunk on weather_data failed
+2025-03-12 21:30:26,066 - my_logger - ERROR - Error reading file: type object 'WeatherData' has no attribute '_DataLoader__DataLoader'
+2025-03-13 16:20:21,590 - my_logger - ERROR - Error reading file: Can't pickle <function WeatherData.__DataLoader._read_chunk at 0x1123fea20>: attribute lookup WeatherData.__DataLoader._read_chunk on weather_data failed
+2025-03-13 16:39:20,025 - my_logger - ERROR - An error occurred while reading the file: Mismatched dtypes found in `pd.read_csv`/`pd.read_table`.
+
++---------------+---------+----------+
+| Column        | Found   | Expected |
++---------------+---------+----------+
+| Humidity3pm   | float64 | int64    |
+| Humidity9am   | float64 | int64    |
+| WindGustSpeed | float64 | int64    |
+| WindSpeed3pm  | float64 | int64    |
+| WindSpeed9am  | float64 | int64    |
++---------------+---------+----------+
+
+Usually this is due to dask's dtype inference failing, and
+*may* be fixed by specifying dtypes manually by adding:
+
+dtype={'Humidity3pm': 'float64',
+       'Humidity9am': 'float64',
+       'WindGustSpeed': 'float64',
+       'WindSpeed3pm': 'float64',
+       'WindSpeed9am': 'float64'}
+
+to the call to `read_csv`/`read_table`.
+
+Alternatively, provide `assume_missing=True` to interpret
+all unspecified integer columns as floats.
+2025-03-16 14:58:31,352 - my_logger - ERROR - File not found: ./Data/Weather Training Data copy.csv

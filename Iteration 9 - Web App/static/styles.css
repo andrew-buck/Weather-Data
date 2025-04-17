@@ -1,0 +1,484 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f4f4f4;
+    min-height: 100vh; /* Minimum height of full viewport */
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+}
+
+main, .content-wrapper, #content {
+    flex: 1; /* This will grow to fill available space */
+}
+
+.container {
+    width: 95%;
+    margin-left: 20px;
+    margin-right: auto;
+    overflow: hidden;
+}
+
+/* Header */
+header {
+    background: #275d38;
+    color: white;
+    padding: 20px 0;
+}
+
+header .container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Left align header content */
+    text-align: left; /* Left align text */
+}
+
+header h1 {
+    margin-bottom: 10px;
+}
+
+nav {
+    background: #333;
+    color: white;
+}
+
+nav .container {
+    padding: 10px 0;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: flex-start; /* Left align navigation */
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+nav li {
+    padding: 0;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 15px;
+    display: block;
+    transition: background 0.3s ease;
+}
+
+nav a:hover {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+a {
+    text-decoration: none;
+    color: rgba(0,0,0,1);
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Virtualizer */
+.location-dropdown-selector, .chart-type-selector, .button-container {
+    margin-bottom: 10px;
+}
+
+.location-dropdown-selector label, .chart-type-selector label, .hidden-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.hidden-label {
+    visibility: hidden; /* Hidden but preserves spacing */
+    height: 19px; /* Match the height of other labels */
+}
+
+.location-dropdown-selector select, .chart-type-selector select {
+    width: 220px;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    height: 38px;
+    background-color: #fff;
+}
+
+.btn-primary {
+    background-color: #275d38;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    height: 38px; /* Match height of dropdowns */
+}
+
+.btn-primary:hover {
+    background-color: #1e4a2d;
+}
+
+@media (max-width: 768px) {
+    /* Stack elements on smaller screens */
+    .form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .location-dropdown-selector select, .chart-type-selector select {
+        width: 100%;
+    }
+    
+    .button-container {
+        align-self: flex-start;
+    }
+}
+
+.chart-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.error {
+    color: #d32f2f;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Improve loading state */
+#chart-display p {
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+}
+
+/* Chart Display */
+.chart-container {
+    background: white;
+    padding: 20px;
+    margin: 30px 0;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Left align chart container content */
+}
+
+.chart-container .container {
+    width: 100%;
+    margin-left: 0; /* Override container margin */
+}
+
+.chart-container h2 {
+    margin-bottom: 20px;
+    text-align: left; /* Explicitly set heading to left align */
+}
+
+.chart-placeholder {
+    width: 100%;
+    max-width: 800px;
+    min-height: 300px; /* Changed from height to min-height */
+    height: auto; /* Allow the container to expand */
+    margin: 20px 0;
+    background-color: #f2f2f2;
+    border: 1px dashed #ccc;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 20px;
+    overflow: visible; /* Ensure content isn't cut off */
+}
+
+/* Add this class for when a chart is displayed */
+.chart-placeholder.with-chart {
+    height: auto;
+    min-height: unset; /* Remove minimum height constraint */
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Ensure images can display at full height */
+.chart-image {
+    max-width: 100%;
+    height: auto !important; /* Force height to auto */
+    display: block;
+    margin: 0 0 20px 0; /* Add bottom margin for spacing */
+}
+
+
+/* Data section */
+.data-container {
+    background: white;
+    padding: 20px;
+    margin: 30px 0;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.data-display {
+    margin-top: 20px;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.data-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.data-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+}
+
+.data-table th, .data-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.data-table th {
+    background-color: #275d38;
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+.data-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.data-table tr:hover {
+    background-color: #ddd;
+}
+
+.record-count {
+    margin-top: 10px;
+    font-style: italic;
+    color: #666;
+}
+
+.id-range-selector {
+    margin-bottom: 10px;
+}
+
+.id-range-selector label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.id-range-selector input {
+    width: 100px;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    height: 38px;
+}
+
+.data-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Action buttons container */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Make the anchor button look like a regular button */
+.btn-secondary {
+    background-color: #0288d1;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    line-height: 22px; /* Adjust for proper vertical alignment */
+    height: 38px; /* Match height of other buttons */
+    box-sizing: border-box;
+}
+
+.btn-secondary:hover {
+    background-color: #0277bd;
+}
+
+.btn-danger {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-danger:hover {
+    background-color: #c62828;
+}
+
+.success {
+    color: #2e7d32;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.page-header h2 {
+    margin: 0;
+    flex-grow: 1;
+}
+
+.btn-back {
+    background-color: #dbd4d4;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 20px;
+    transition: background-color 0.2s;
+}
+
+.btn-back:hover {
+    background-color: #cac6c6;
+    text-decoration: none;
+    color: white;
+}
+/* Features */
+.features {
+    margin-top: auto; /* Pushes features to bottom if there's space */
+    margin-bottom: 0;
+    padding: 30px 0;
+    width: 100%;
+}
+
+.features h2 {
+    text-align: left; /* Left align feature headings */
+    margin-bottom: 30px;
+}
+
+.feature-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start; /* Left align feature boxes */
+}
+
+.feature-box {
+    background: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex: 1 1 300px;
+    max-width: 400px;
+}
+
+.feature-box:hover, .feature_box:focus {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+    border-color: #0288d1;
+}
+
+/* Footer */
+footer {
+    background: #333;
+    color: white;
+    text-align: left; /* Left align footer text */
+    padding: 20px 0;
+    margin-top: 0;
+    width: 100%;
+}
+
+/* Add left padding to footer content */
+footer .container {
+    padding-left: 20px;
+}
+
+/* Form styling for data insertion */
+.weather-data-form {
+    margin-top: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 15px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    height: 38px;
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+
+/* Success and error messages */
+.success {
+    color: #2e7d32;
+    font-weight: bold;
+    background-color: #e8f5e9;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.error {
+    color: #d32f2f;
+    font-weight: bold;
+    background-color: #ffebee;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+

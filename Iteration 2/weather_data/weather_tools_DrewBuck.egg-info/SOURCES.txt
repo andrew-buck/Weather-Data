@@ -1,0 +1,12 @@
+MANIFEST.in
+README.md
+setup.py
+weather_data/__init__.py
+weather_data/weather_data.py
+weather_data/data/Weather Test Data.csv
+weather_data/data/Weather Training Data.csv
+weather_tools_DrewBuck.egg-info/PKG-INFO
+weather_tools_DrewBuck.egg-info/SOURCES.txt
+weather_tools_DrewBuck.egg-info/dependency_links.txt
+weather_tools_DrewBuck.egg-info/requires.txt
+weather_tools_DrewBuck.egg-info/top_level.txt

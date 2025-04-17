@@ -1,0 +1,11 @@
+
+2025-04-09 20:55:46,808 - my_logger - INFO - Successfully loaded 98999 records from database
+2025-04-09 20:55:47,511 - my_logger - ERROR - Error updating from database: "None of ['Location'] are in the columns"
+2025-04-09 20:55:48,208 - my_logger - ERROR - Error updating from database: "None of ['Location'] are in the columns"
+2025-04-09 20:55:48,306 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 20:55:48] "POST /generate-chart HTTP/1.1" 200 -
+2025-04-09 20:55:49,026 - my_logger - ERROR - Error updating from database: "None of ['Location'] are in the columns"
+2025-04-09 20:55:49,106 - werkzeug - INFO - 127.0.0.1 - - [09/Apr/2025 20:55:49] "POST /generate-chart HTTP/1.1" 200 -
+2025-04-17 13:44:05,819 - my_logger - INFO - Successfully loaded 98999 records from database
+2025-04-17 13:44:06,289 - my_logger - ERROR - Error updating from database: "None of ['Location'] are in the columns"
+2025-04-17 13:44:06,760 - my_logger - ERROR - Error updating from database: "None of ['Location'] are in the columns"
+2025-04-17 13:44:06,826 - werkzeug - INFO - 127.0.0.1 - - [17/Apr/2025 13:44:06] "POST /generate-chart HTTP/1.1" 200 -

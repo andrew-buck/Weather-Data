@@ -1,0 +1,169 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="data-container">
+    <div class="container">
+        <h2>Weather Data Interface</h2>
+        
+        <!-- Data Selection Form -->
+        <div class="data-selector">
+            <form id="data-form">
+                <div class="form-row">
+                    <div class="id-range-selector">
+                        <label for="min-id">From ID:</label>
+                        <input type="number" id="min-id" name="min_id" value="1" min="1" max="{{ max_id }}">
+                    </div>
+                    <div class="id-range-selector">
+                        <label for="max-id">To ID:</label>
+                        <input type="number" id="max-id" name="max_id" value="{{ max_id }}" min="1" max="{{ max_id }}">
+                    </div>
+                    <div class="button-container">
+                        <label class="hidden-label">Actions:</label>
+                        <div class="action-buttons">
+                            <button type="submit" class="btn-primary">View Data</button>
+                            <button type="button" id="delete-data-btn" class="btn-danger">Delete Range</button>
+                            <a href="/data-insertion" class="btn-secondary">Insert Data</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Data table container -->
+        <div class="data-display" id="data-display">
+            <p>Enter an ID range and click "View Data" to see weather records.</p>
+        </div>
+    </div>
+</section>
+
+<script>
+// View data functionality
+document.getElementById('data-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Show loading message
+    document.getElementById('data-display').innerHTML = '<p>Loading data...</p>';
+    
+    // Get form values
+    const minId = document.getElementById('min-id').value;
+    const maxId = document.getElementById('max-id').value;
+    
+    // Validate form values
+    if (parseInt(minId) > parseInt(maxId)) {
+        document.getElementById('data-display').innerHTML = 
+            '<p class="error">Error: "From ID" must be less than or equal to "To ID"</p>';
+        return;
+    }
+    
+    fetch(`/get-data?min_id=${encodeURIComponent(minId)}&max_id=${encodeURIComponent(maxId)}`)
+        .then(response => response.json())
+        .then(data => {
+            const dataDisplay = document.getElementById('data-display');
+            
+            if (data.success && data.rows && data.columns) {
+                // Create table to display data
+                let tableHTML = '<div class="data-table-container"><table class="data-table"><thead><tr>';
+                
+                // Add column headers
+                data.columns.forEach(column => {
+                    tableHTML += `<th>${column}</th>`;
+                });
+                tableHTML += '</tr></thead><tbody>';
+                
+                // Add rows
+                data.rows.forEach(row => {
+                    tableHTML += '<tr>';
+                    row.forEach(cell => {
+                        tableHTML += `<td>${cell !== null ? cell : ''}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+                
+                tableHTML += '</tbody></table></div>';
+                
+                // Display table
+                dataDisplay.innerHTML = tableHTML;
+                
+                // Show row count
+                const rowCount = data.rows.length;
+                dataDisplay.innerHTML += `<p class="record-count">${rowCount} record${rowCount !== 1 ? 's' : ''} found.</p>`;
+            } else {
+                // Show error message
+                dataDisplay.innerHTML = `<p class="error">${data.error || 'No data found.'}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('data-display').innerHTML = 
+                `<p class="error">Error loading data: ${error.message}</p>`;
+        });
+});
+
+// Delete data functionality
+document.getElementById('delete-data-btn').addEventListener('click', function() {
+    const minId = document.getElementById('min-id').value;
+    const maxId = document.getElementById('max-id').value;
+    
+    // Confirm deletion
+    if (confirm(`WARNING: This will permanently delete all records with IDs from ${minId} to ${maxId}. Continue?`)) {
+        // Double confirm for larger deletions
+        if ((parseInt(maxId) - parseInt(minId)) > 10 && !confirm(`You are about to delete ${parseInt(maxId) - parseInt(minId) + 1} records. Are you absolutely sure?`)) {
+            return;
+        }
+        
+        // Show loading message
+        document.getElementById('data-display').innerHTML = '<p>Deleting data...</p>';
+        
+        // Send request to delete data
+        fetch('/delete-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                min_id: minId,
+                max_id: maxId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('data-display').innerHTML = 
+                    `<p class="success">${data.message}</p>`;
+                    
+                // Update the max ID if needed
+                if (document.getElementById('max-id').value > data.new_max_id) {
+                    document.getElementById('max-id').value = data.new_max_id;
+                    document.getElementById('max-id').max = data.new_max_id;
+                }
+            } else {
+                document.getElementById('data-display').innerHTML = 
+                    `<p class="error">Error: ${data.error}</p>`;
+            }
+        })
+        .catch(error => {
+            document.getElementById('data-display').innerHTML = 
+                `<p class="error">Error: ${error.message}</p>`;
+        });
+    }
+});
+
+// Add validation for input fields
+document.addEventListener('DOMContentLoaded', function() {
+    const minIdInput = document.getElementById('min-id');
+    const maxIdInput = document.getElementById('max-id');
+    
+    // Add validation for min/max relationship
+    minIdInput.addEventListener('change', function() {
+        if (parseInt(this.value) > parseInt(maxIdInput.value)) {
+            this.value = maxIdInput.value;
+        }
+    });
+    
+    maxIdInput.addEventListener('change', function() {
+        if (parseInt(this.value) < parseInt(minIdInput.value)) {
+            this.value = minIdInput.value;
+        }
+    });
+});
+</script>
+{% endblock %} 
