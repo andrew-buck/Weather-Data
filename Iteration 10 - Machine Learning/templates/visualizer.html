@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="chart-container">
+    <div class="container">
+        <h2>Weather Charts</h2>
+        <div class="location-selector">
+            <form id="location-form">
+                <div class="form-row">
+                    <div class="location-dropdown-selector">
+                        <label for="location-select">Location:</label>
+                        <select id="location-select" name="location">
+                            {% for location in locations %}
+                                <option value="{{ location }}">{{ location }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="chart-type-selector">
+                        <label for="chart-type">Chart Type:</label>
+                        <select id="chart-type" name="chart_type">
+                            <option value="daily_rain">Daily Rainfall</option>
+                            <option value="weekly_rain">Weekly Rainfall</option>
+                            <option value="humidity">Humidity</option>
+                            <option value="temperature">Temperature</option>
+                            <option value="windy_days">Windy Days</option>
+                        </select>
+                    </div>
+                    <div class="button-container">
+                        <label class="hidden-label">Action:</label>
+                        <button type="submit" class="btn-primary">Generate Chart</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="chart-placeholder" id="chart-display">
+            <p>Select a location and chart type above to visualize weather data</p>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.getElementById('location-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show loading message
+        document.getElementById('chart-display').innerHTML = 
+            '<p>Generating chart, please wait...</p>';
+        
+        // Get form data
+        const formData = new FormData(this);
+        
+        // Send AJAX request to generate chart
+        fetch('/generate-chart', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            const chartDisplay = document.getElementById('chart-display');
+            
+            if (data.success && data.image) {
+                // Display the generated chart
+                chartDisplay.innerHTML = `<img src="${data.image}" alt="Weather chart" class="chart-image">`;
+                
+                // Add class for chart display styling
+                chartDisplay.classList.add('with-chart');
+            } else {
+                // Show error message
+                chartDisplay.innerHTML = `<p class="error">Error: ${data.error || 'Failed to generate chart'}</p>`;
+                chartDisplay.classList.remove('with-chart'); // Remove class if there's an error
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('chart-display').innerHTML = 
+                `<p class="error">Network error: Could not generate chart</p>`;
+            document.getElementById('chart-display').classList.remove('with-chart');
+        });
+    });
+    </script>
+
+{% endblock %}

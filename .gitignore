@@ -1,2 +1,9 @@
 *.csv
 *.zip
+.DS_Store
+.DS_Store
+*.pyc
+*.joblib
+Iteration 10 - Machine Learning/models/multivariate_model_metadata.json
+*.png
+*.db
