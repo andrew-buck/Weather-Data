@@ -1,0 +1,163 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="chart-container">
+        <h2>Weather Forecasts</h2>
+        <p>Generate weather forecasts based on machine learning models.</p>
+        
+        <div class="form-row">
+            <div class="location-dropdown-selector">
+                <label for="location-select">Select Location:</label>
+                <select id="location-select">
+                    <option value="">-- Select a location --</option>
+                    {% for location in locations %}
+                    <option value="{{ location }}">{{ location }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="chart-type-selector">
+                <label for="days-select">Forecast Period:</label>
+                <select id="days-select">
+                    <option value="1">1 Day</option>
+                    <option value="3">3 Days</option>
+                    <option value="7" selected>7 Days</option>
+                </select>
+            </div>
+            
+            <div class="button-container">
+                <label class="hidden-label">Generate</label>
+                <button id="generate-forecast" class="btn-primary">Generate Forecast</button>
+            </div>
+        </div>
+        
+        <div id="forecast-display">
+            <p>Select a location and forecast period to generate a weather forecast.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const locationSelect = document.getElementById('location-select');
+        const daysSelect = document.getElementById('days-select');
+        const generateBtn = document.getElementById('generate-forecast');
+        const forecastDisplay = document.getElementById('forecast-display');
+        
+        generateBtn.addEventListener('click', function() {
+            const location = locationSelect.value;
+            const days = daysSelect.value;
+            
+            if (!location) {
+                forecastDisplay.innerHTML = '<p class="error">Please select a location</p>';
+                return;
+            }
+            
+            // Show loading state
+            forecastDisplay.innerHTML = '<p>Generating forecast, please wait...</p>';
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('location', location);
+            formData.append('days', days);
+            
+            // Send AJAX request
+            fetch('/generate-forecast', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    forecastDisplay.innerHTML = `<p class="error">${data.error}</p>`;
+                    return;
+                }
+                
+                // Process successful forecast data
+                const forecast = data.forecast;
+                
+                // Create result HTML
+                let html = `
+                    <h3>Weather Forecast for ${forecast.location}</h3>
+                    <div class="forecast-results">
+                `;
+                
+                // Get all available variables from forecast data
+                const availableVars = Object.keys(forecast.forecasts);
+                
+                // Priority variables to display first (if available)
+                const priorityVars = ['MaxTemp', 'MinTemp', 'Rainfall', 'Humidity9am', 'Humidity3pm', 'WindGustSpeed'];
+                
+                // Create ordered list of variables, prioritizing important ones
+                const varsToShow = [];
+                
+                // First add priority variables if available
+                priorityVars.forEach(varName => {
+                    if (availableVars.includes(varName)) {
+                        varsToShow.push(varName);
+                    }
+                });
+                
+                // Then add all remaining variables
+                availableVars.forEach(varName => {
+                    if (!varsToShow.includes(varName)) {
+                        varsToShow.push(varName);
+                    }
+                });
+                
+                // Create a table for the forecast
+                html += '<table class="data-table forecast-table">';
+                
+                // Header row with dates
+                html += '<tr><th>Variable</th>';
+                forecast.dates.forEach(date => {
+                    html += `<th>${date}</th>`;
+                });
+                html += '</tr>';
+                
+                // Add rows for each variable
+                varsToShow.forEach(varName => {
+                    const varData = forecast.forecasts[varName];
+                    html += `<tr><td>${varName} (${varData.units})</td>`;
+                    
+                    varData.values.forEach(value => {
+                        html += `<td>${value.toFixed(1)}</td>`;
+                    });
+                    
+                    html += '</tr>';
+                });
+                
+                html += '</table>';
+                
+                // Add statistical information
+                html += '<div class="forecast-stats">';
+                html += '<h4>Statistical Information</h4>';
+                html += '<table class="data-table stats-table">';
+                html += '<tr><th>Variable</th><th>Historical Mean</th><th>Historical Min</th><th>Historical Max</th></tr>';
+                
+                varsToShow.forEach(varName => {
+                    const stats = forecast.forecasts[varName].stats;
+                    html += `<tr>
+                        <td>${varName}</td>
+                        <td>${stats.mean.toFixed(2)}</td>
+                        <td>${stats.min.toFixed(2)}</td>
+                        <td>${stats.max.toFixed(2)}</td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                html += '</div>'; // End of stats div
+                
+                html += '</div>'; // End of forecast-results div
+                
+                forecastDisplay.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                forecastDisplay.innerHTML = '<p class="error">Error generating forecast. Please try again.</p>';
+            });
+        });
+    });
+</script>
+{% endblock %}

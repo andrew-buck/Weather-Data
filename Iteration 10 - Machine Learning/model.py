@@ -8,13 +8,22 @@ import numpy as np
 import joblib
 import json
 from datetime import datetime, timedelta
+# Add imports for model evaluation and tuning
+from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit  # Changed to RandomizedSearchCV
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 
 # Create necessary directories
 os.makedirs('./logging', exist_ok=True)
 os.makedirs('./models', exist_ok=True)
+os.makedirs('./model_evaluation', exist_ok=True)  # New directory for evaluation results
 logging.basicConfig(filename='./logging/logging.log', level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("my_logger")
+
+# Add a flag to control evaluation intensity
+FAST_MODE = True  # Set to False for full evaluation
 
 # Load your weather data
 weather_df = pd.DataFrame()
@@ -117,12 +126,12 @@ for location, df in location_dfs.items():
         print(f"  WARNING: Not enough columns for {location} after filtering. Skipping.")
         continue
     
-    # Store metadata for this location
+    # Create model metadata entry with evaluation metrics section
     model_metadata[location] = {
         'available_columns': all_cols,
         'db_column_mapping': {col: next((k for k, v in column_mapping.items() if v == col), None) for col in all_cols},
         'n_lags': 14,  # Use 14 days of history
-        'model_path': f'./models/{location}_multivariate_forecaster.joblib',
+        'model_path': f'./models/multivariate_{location}.joblib',
         'train_stats': {
             col: {
                 'mean': float(df[col].mean()),
@@ -130,7 +139,9 @@ for location, df in location_dfs.items():
                 'min': float(df[col].min()),
                 'max': float(df[col].max())
             } for col in all_cols
-        }
+        },
+        'eval_metrics': {},  # Will store evaluation metrics
+        'hyperparameters': {}  # Will store best hyperparameters
     }
     
     # Prepare data for multivariate forecasting using 14 days of history
@@ -157,12 +168,176 @@ for location, df in location_dfs.items():
     print(f"  Using columns: {', '.join(all_cols)}")
     
     try:
-        # Train multivariate random forest model
-        multi_forecaster = RandomForestRegressor(n_estimators=100, n_jobs=-1, random_state=42)
-        multi_forecaster.fit(X_multi, y_multi)
+        # Define time series cross-validation with fewer splits in fast mode
+        tscv = TimeSeriesSplit(n_splits=3 if FAST_MODE else 5)
         
-        # Save the model in .joblib format
-        joblib.dump(multi_forecaster, model_metadata[location]['model_path'])
+        # Define parameter grid for hyperparameter tuning - reduced in fast mode
+        if FAST_MODE:
+            param_grid = {
+                'n_estimators': [50, 100],
+                'max_depth': [10, 20],
+                'min_samples_split': [2, 5],
+                'min_samples_leaf': [1, 2]
+            }
+            # Number of iterations for RandomizedSearchCV
+            n_iter_search = 5
+        else:
+            param_grid = {
+                'n_estimators': [50, 100, 200],
+                'max_depth': [None, 10, 20, 30],
+                'min_samples_split': [2, 5, 10],
+                'min_samples_leaf': [1, 2, 4]
+            }
+            # Number of iterations for RandomizedSearchCV
+            n_iter_search = 10
+        
+        print(f"  Performing hyperparameter tuning with RandomizedSearchCV...")
+        
+        # Initialize the base model
+        base_model = RandomForestRegressor(random_state=42, n_jobs=-1)
+        
+        # Use RandomizedSearchCV instead of GridSearchCV - much faster
+        search = RandomizedSearchCV(
+            estimator=base_model,
+            param_distributions=param_grid,
+            cv=tscv,
+            scoring='neg_mean_squared_error',
+            n_jobs=-1,
+            verbose=0,
+            n_iter=n_iter_search
+        )
+        
+        # Fit RandomizedSearchCV
+        search.fit(X_multi, y_multi)
+        
+        # Get best parameters and model
+        best_params = search.best_params_
+        best_model = search.best_estimator_
+        
+        print(f"  Best parameters: {best_params}")
+        
+        # Store hyperparameters in metadata
+        model_metadata[location]['hyperparameters'] = best_params
+        
+        # Evaluate model using cross-validation
+        print(f"  Evaluating model with time series cross-validation...")
+        
+        # Initialize metrics dictionaries
+        metrics = {
+            'rmse': [],
+            'mae': [],
+            'r2': []
+        }
+        
+        # Perform time series cross-validation for evaluation
+        for train_idx, test_idx in tscv.split(X_multi):
+            X_train, X_test = X_multi[train_idx], X_multi[test_idx]
+            y_train, y_test = y_multi[train_idx], y_multi[test_idx]
+            
+            # Fit model on training set
+            best_model.fit(X_train, y_train)
+            
+            # Predict on test set
+            y_pred = best_model.predict(X_test)
+            
+            # Calculate metrics for each target variable
+            for i, col in enumerate(all_cols):
+                y_test_col = y_test[:, i]
+                y_pred_col = y_pred[:, i]
+                
+                # Calculate metrics
+                rmse = np.sqrt(mean_squared_error(y_test_col, y_pred_col))
+                mae = mean_absolute_error(y_test_col, y_pred_col)
+                r2 = r2_score(y_test_col, y_pred_col)
+                
+                # Store metrics by column
+                if col not in metrics:
+                    metrics[col] = {'rmse': [], 'mae': [], 'r2': []}
+                
+                metrics[col]['rmse'].append(rmse)
+                metrics[col]['mae'].append(mae)
+                metrics[col]['r2'].append(r2)
+        
+        # Calculate average metrics across folds
+        avg_metrics = {}
+        for col in metrics:
+            if col in ['rmse', 'mae', 'r2']:
+                continue
+                
+            avg_metrics[col] = {
+                'rmse': float(np.mean(metrics[col]['rmse'])),
+                'mae': float(np.mean(metrics[col]['mae'])),
+                'r2': float(np.mean(metrics[col]['r2']))
+            }
+            
+            # Print metrics for each column
+            print(f"  Metrics for {col}:")
+            print(f"    RMSE: {avg_metrics[col]['rmse']:.4f}")
+            print(f"    MAE: {avg_metrics[col]['mae']:.4f}")
+            print(f"    R²: {avg_metrics[col]['r2']:.4f}")
+        
+        # Store metrics in metadata
+        model_metadata[location]['eval_metrics'] = avg_metrics
+        
+        # Fit final model on all data using best parameters
+        final_model = RandomForestRegressor(**best_params, random_state=42, n_jobs=-1)
+        final_model.fit(X_multi, y_multi)
+        
+        # Create visualization of feature importance - skip in fast mode or make it smaller
+        if FAST_MODE:
+            plt.figure(figsize=(8, 6))
+        else:
+            plt.figure(figsize=(12, 8))
+        
+        # Get feature importance
+        importances = final_model.feature_importances_
+        
+        # The features are repeated for each lag, so we need to aggregate them
+        n_features = len(all_cols)
+        n_lags_used = X_multi.shape[1] // n_features
+        
+        # Reshape importances to (n_lags, n_features)
+        importances_reshaped = importances.reshape(n_lags_used, n_features)
+        
+        # Sum importance across lags for each feature
+        feature_importances = importances_reshaped.sum(axis=0)
+        
+        # Create indices for sorting
+        indices = np.argsort(feature_importances)
+        
+        # Plot feature importance
+        plt.barh(range(len(indices)), feature_importances[indices])
+        plt.yticks(range(len(indices)), [all_cols[i] for i in indices])
+        plt.xlabel('Feature Importance')
+        plt.title(f'Feature Importance for {location}')
+        
+        # Save plot with lower DPI in fast mode
+        plt.tight_layout()
+        feature_imp_path = f'./model_evaluation/{location}_feature_importance.png'
+        plt.savefig(feature_imp_path, dpi=100 if FAST_MODE else 300)
+        plt.close()
+        
+        # Save model evaluation results
+        eval_results = {
+            'location': location,
+            'metrics': avg_metrics,
+            'best_parameters': best_params,
+            'n_samples': len(X_multi),
+            'feature_importance': {all_cols[i]: float(feature_importances[i]) for i in range(len(all_cols))},
+            'training_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'model_path': model_metadata[location]['model_path']
+        }
+        
+        # Save evaluation results to JSON
+        eval_path = f'./model_evaluation/{location}_evaluation.json'
+        with open(eval_path, 'w') as f:
+            json.dump(eval_results, f, indent=4)
+        
+        print(f"  Model evaluation results saved to {eval_path}")
+        print(f"  Feature importance plot saved to {feature_imp_path}")
+        
+        # Save the final model
+        joblib.dump(final_model, model_metadata[location]['model_path'])
         print(f"  Model saved to {model_metadata[location]['model_path']}")
         
     except Exception as e:
@@ -179,27 +354,3 @@ print(f"Created models for {len(model_metadata)} locations.")
 print("All models are saved in the 'models' directory in .joblib format.")
 print("Model metadata is saved to 'models/multivariate_model_metadata.json'.")
 print("Use the separate multivariate_forecaster.py file to generate forecasts.")
-print("\nExample usage from an external file:")
-print("""
-from models.multivariate_forecaster import MultivariateForecaster
-
-# Initialize the multivariate forecaster
-forecaster = MultivariateForecaster()
-
-# Get available locations
-locations = forecaster.get_available_locations()
-print(f"Available locations: {locations}")
-
-# Generate a 7-day forecast for all weather variables in Sydney
-sydney_forecast = forecaster.forecast('Sydney')
-
-# Print temperature forecasts
-print(f"\\n7-day MaxTemp forecast for Sydney:")
-for date, value in zip(sydney_forecast['dates'], sydney_forecast['forecasts']['MaxTemp']['values']):
-    print(f"  {date}: {value:.1f}°C")
-
-# Print rainfall forecasts
-print(f"\\n7-day Rainfall forecast for Sydney:")
-for date, value in zip(sydney_forecast['dates'], sydney_forecast['forecasts']['Rainfall']['values']):
-    print(f"  {date}: {value:.1f}mm")
-""")

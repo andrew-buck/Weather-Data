@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Data Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Weather Data Dashboard</h1>
+            <p>A simple dashboard to visualize, analyze, and edit your weather data</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/visualizer">Visualizer</a></li>
+                <li><a href="/forecast">Forecast</a></li>
+                <li><a href="/data-interface">Data Management</a></li>
+                <li><a href="/summary">Data Summary</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="content-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <section class="features">
+        <div class="container">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <a href="/visualizer" class="feature-box" role="button" aria-label="Go to Data Visualization page">
+                    <h3>Data Visualization</h3>
+                    <p>View your weather data through interactive graphs and charts</p>
+                </a>
+                
+                <a href="/forecast" class="feature-box" role="button" aria-label="Go to Weather Forecasts page">
+                    <h3>Weather Forecasts</h3>
+                    <p>Generate machine learning based weather predictions</p>
+                </a>
+                
+                <a href="/data-interface" class="feature-box" role="button" aria-label="Go to Data Editing page">
+                    <h3>View, Add, or Remove Data</h3>
+                    <p>Easily manage your weather records with simple controls</p>
+                </a>
+                <a href="/summary" class="feature-box" role="button" aria-label="Go to Data Summary page">
+                    <h3>Data Summary</h3>
+                    <p>Get a quick overview of your weather data statistics</p>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <p>2025 Weather Data Dashboard</p>
+        </div>
+    </footer>
+</body>
+</html>

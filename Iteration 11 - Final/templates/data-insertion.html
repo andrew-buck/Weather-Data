@@ -1,0 +1,173 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="data-container">
+    <div class="container">
+        <div class="page-header">
+            <h2>Insert Weather Data</h2>
+            <a href="/data-interface" class="btn-back">← Back to Data Interface</a>
+        </div>
+        
+        <div id="status-message"></div>
+        
+        <form id="weather-form" class="weather-data-form">
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div class="form-group">
+                    <label for="row_id">Row ID:</label>
+                    <input type="text" id="row_id" name="row_id" placeholder="e.g., Row7066" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location" placeholder="e.g., NorfolkIsland" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="mintemp">MinTemp:</label>
+                    <input type="number" id="mintemp" name="mintemp" step="0.1" placeholder="e.g., 20.1" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="maxtemp">MaxTemp:</label>
+                    <input type="number" id="maxtemp" name="maxtemp" step="0.1" placeholder="e.g., 25.1" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="rainfall">Rainfall:</label>
+                    <input type="number" id="rainfall" name="rainfall" step="0.1" placeholder="e.g., 2.2" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="evaporation">Evaporation:</label>
+                    <input type="number" id="evaporation" name="evaporation" step="0.1" placeholder="e.g., 2.4" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="sunshine">Sunshine:</label>
+                    <input type="number" id="sunshine" name="sunshine" step="0.1" placeholder="e.g., 4.1" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="windgustdir">WindGustDir:</label>
+                    <input type="text" id="windgustdir" name="windgustdir" placeholder="e.g., WNW" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="windgustspeed">WindGustSpeed:</label>
+                    <input type="number" id="windgustspeed" name="windgustspeed" placeholder="e.g., 46" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="winddir9am">WindDir9am:</label>
+                    <input type="text" id="winddir9am" name="winddir9am" placeholder="e.g., E" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="winddir3pm">WindDir3pm:</label>
+                    <input type="text" id="winddir3pm" name="winddir3pm" placeholder="e.g., E" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="windspeed9am">WindSpeed9am:</label>
+                    <input type="number" id="windspeed9am" name="windspeed9am" placeholder="e.g., 24" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="windspeed3pm">WindSpeed3pm:</label>
+                    <input type="number" id="windspeed3pm" name="windspeed3pm" placeholder="e.g., 28" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="humidity9am">Humidity9am:</label>
+                    <input type="number" id="humidity9am" name="humidity9am" placeholder="e.g., 81" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="humidity3pm">Humidity3pm:</label>
+                    <input type="number" id="humidity3pm" name="humidity3pm" placeholder="e.g., 80" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="pressure9am">Pressure9am:</label>
+                    <input type="number" id="pressure9am" name="pressure9am" step="0.1" placeholder="e.g., 1015.5" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="pressure3pm">Pressure3pm:</label>
+                    <input type="number" id="pressure3pm" name="pressure3pm" step="0.1" placeholder="e.g., 1013.8" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cloud9am">Cloud9am:</label>
+                    <input type="number" id="cloud9am" name="cloud9am" placeholder="e.g., 6" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cloud3pm">Cloud3pm:</label>
+                    <input type="number" id="cloud3pm" name="cloud3pm" placeholder="e.g., 7" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="temp9am">Temp9am:</label>
+                    <input type="number" id="temp9am" name="temp9am" step="0.1" placeholder="e.g., 23.6" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="temp3pm">Temp3pm:</label>
+                    <input type="number" id="temp3pm" name="temp3pm" step="0.1" placeholder="e.g., 22.8" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="raintoday">RainToday:</label>
+                    <select id="raintoday" name="raintoday" class="form-control">
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+                <button type="submit" class="btn-primary" id="insert-data-btn">Insert Data</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('weather-form');
+    const statusMessage = document.getElementById('status-message');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Collect form data
+        const formData = new FormData(form);
+        const data = {};
+        for (const [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+        
+        // Send data to server
+        fetch('/insert-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                statusMessage.innerHTML = `<div class="success">${result.message}</div>`;
+                form.reset(); // Clear form on success
+            } else {
+                statusMessage.innerHTML = `<div class="error">${result.error}</div>`;
+            }
+        })
+        .catch(error => {
+            statusMessage.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        });
+    });
+});
+</script>
+{% endblock %}

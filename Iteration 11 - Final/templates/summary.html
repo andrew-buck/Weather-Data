@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}Weather Data Summary{% endblock %}
+
+{% block content %}
+<section class="summary-section">
+    <div class="container">
+        <h1>Weather Data Summary Statistics</h1>
+        <p class="description">This page displays comprehensive statistical information about the weather data in the database, including:
+            <ul>
+                <li><strong>Count</strong>: Number of non-null values</li>
+                <li><strong>Mean</strong>: Average value</li>
+                <li><strong>Standard Deviation</strong>: Measure of data dispersion</li>
+                <li><strong>Minimum</strong>: Lowest recorded value</li>
+                <li><strong>25% Quartile</strong>: First quartile (25th percentile)</li>
+                <li><strong>Median</strong>: Middle value (50th percentile)</li>
+                <li><strong>75% Quartile</strong>: Third quartile (75th percentile)</li>
+                <li><strong>Maximum</strong>: Highest recorded value</li>
+            </ul>
+        </p>
+        <div class="card">
+            <div class="summary-container">
+                {{ summary_table|safe }}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
